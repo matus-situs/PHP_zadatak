@@ -2,60 +2,66 @@
 require_once("connection.php");
 
 trait Timestamps {
-    private function addTimestamps() {
-        $sql = " created_at DATETIME DEFAULT CURRENT_TIMESTAMP,"
-        ." updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,"
-        ." deleted_at DATETIME DEFAULT NULL";
-        return $sql;
+    public function addTimestamps() {
+        $sql = "SHOW COLUMNS FROM ".$this->table." LIKE 'deleted_at'";
+        $column = $this->connection->query($sql)->fetch();
+        if (!$column) {
+            $sql = "ALTER TABLE ".$this->table
+            ." ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP,"
+            ."ADD COLUMN updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,"
+            ."ADD COLUMN deleted_at DATETIME DEFAULT NULL";
+            $this->connection->query($sql);
+        }
+        
     }
-    private function stringExists() {
-        return "deleted_at IS NULL";
-    }
-    protected function deleteModel() {
-        $sql = "UPDATE ".$this->table." SET ".$this->table.".deleted_at=CURRENT_DATE";
-        $this->connection->query($sql);
+    public function delete($id) {
+        $sql = "SHOW COLUMNS FROM ".$this->table." LIKE 'deleted_at'";
+        $column = $this->connection->query($sql)->fetch();
+        if ($column) {
+            $sql = "UPDATE ".$this->table." SET ".$this->table.".deleted_at=CURRENT_DATE WHERE id=".$id;
+            $this->connection->query($sql);
+        }
     }
 }
 
 class Model {
-    use Timestamps;
     protected $attributes = [];
     protected $allowed = [];
     protected $table;
-    private $database;
-    private $connection;
-    public function __construct() {
-        $this->database = new Connection;
-        $this->connection = $this->database->connectDB("localhost", "test", null, null);
-    }
-    protected function toArray() {
+    protected $database;
+    protected $connection;
+    public function toArray() {
         return get_object_vars($this);
     }
     public function __get($name) {
-        if (array_key_exists($name, $this->attributes)) {
-            return $this->attributes[$name];
+        if (array_key_exists($name, $this->allowed)) {
+            return $this->allowed[$name];
         }
     }
     public function __set($name, $value) {
-        $this->attributes[$name] = $value;
+        if (array_key_exists($name, $this->allowed)) {
+            $this->allowed[$name] = $value;
+        } else {
+            throw new Exception("No permission to set this variable ".$name);
+        }
     }
     public function __toString() {
         $string = "Table name: ".$this->table.". ";
         $string .= "Attributes: ";
-        foreach ($this->attributes as $attribute) {
-            $string .= $attribute.", ";
+        foreach ($this->attributes as $key=>$attribute) {
+            $string .= $key." - ".$attribute.", ";
         }
         return $string;
     } 
     public function __call($method, $arguments) {
-        return call_user_func_array($method, $arguments);
+        return call_user_func($method, $arguments);
     }
     public function __isset($name) {
-        return isset($this->attributes[$name]);
+        return isset($this->allowed[$name]);
     }
     public function __unset($name) {
-        if (array_key_exists($name, $this->attributes)) {
-            unset($this->attributes[$name]);
+        if (array_key_exists($name, $this->allowed)) {
+            unset($this->allowed[$name]);
         }
     }
     public function __wakeup() {
@@ -64,41 +70,55 @@ class Model {
     public function __sleep() {
         return ['table', 'attributes', 'allowed'];
     }
-    protected function save() {
-        $sql = "SHOW TABLES";
-        $tables = $this->connection->query($sql)->fetchAll(PDO::FETCH_GROUP);
-        if (in_array($this->table, array_keys($tables))) {
-            $sql = "SELECT `COLUMN_NAME` FROM `INFORMATION_SCHEMA`.`COLUMNS`WHERE `TABLE_NAME`=".$this->table;
-            $columns = $this->connection->query($sql)->fetchAll();
-            foreach ($this->attributes as $attribute) {
-                if (!array_key_exists($attribute, $columns)) {
-                    $sql = "ALTER TABLE ".$this->table." ADD COLUMN ".$attribute." TEXT";
-                    $this->connection->query($sql);
-                }
-            }
-        } else {
-            $sql = "CREATE TABLE ".$this->table." (";
-            foreach ($this->attributes as $attribute) {
-                $sql .= $attribute." TEXT,";
-            }
-            $sql .= $this->addTimestamps().");";
-            $this->connection->query($sql);
+    public function save() {
+        foreach ($this->allowed as $key=>$attribute) {
+            $this->attributes[$key] = $this->allowed[$key];
         }
+        $sql = "INSERT INTO ".$this->table." (";
+        foreach ($this->attributes as $key=>$attribute) {
+            $sql .= $key.",";
+        }
+        $sql = rtrim($sql, ",");
+        $sql .= ") VALUES (";
+        foreach ($this->attributes as $key=>$attribute) {
+            $sql .= "'".$attribute."',";
+        }
+        $sql = rtrim($sql, ",");
+        $sql .= ")";
+        $this->connection->query($sql);
     }
-    protected function all() {
-        $sql = "SELECT * FROM ".$this->table." WHERE deleted_at ".$this->stringExists();
+    public function all() {
+        $sql = "SHOW COLUMNS FROM ".$this->table." LIKE 'deleted_at'";
+        $column = $this->connection->query($sql)->fetch();
+        if (!$column) {
+            $sql = "SELECT * FROM ".$this->table;
+        } else {
+            $sql = "SELECT * FROM ".$this->table." WHERE deleted_at IS NULL";
+        }
         return $this->connection->query($sql)->fetchAll();
     }
-    protected function fetchByID($id) {
-        $sql = "SELECT * FROM ".$this->table." WHERE id=".$id." AND ".$this->stringExists();
+    public function fetchByID($id) {
+        $sql = "SHOW COLUMNS FROM ".$this->table." LIKE 'deleted_at'";
+        $column = $this->connection->query($sql)->fetch();
+        if (!$column) {
+            $sql = "SELECT * FROM ".$this->table." WHERE id=".$id;
+        } else {
+            $sql = "SELECT * FROM ".$this->table." WHERE id=".$id." AND deleted_at IS NULL";
+        }
         return $this->connection->query($sql)->fetch();
     }
-    protected function fetchByAttribute($attribute, $value) {
-        $sql = "SELECT ".$attribute." FROM ".$this->table." WHERE ".$attribute."='".$value."' AND ".$this->stringExists();
+    public function fetchByAttribute($attribute, $value) {
+        $sql = "SHOW COLUMNS FROM ".$this->table." LIKE 'deleted_at'";
+        $column = $this->connection->query($sql)->fetch();
+        if (!$column) {
+            $sql = "SELECT * FROM ".$this->table." WHERE ".$attribute."='".$value."'";
+        } else {   
+            $sql = "SELECT * FROM ".$this->table." WHERE ".$attribute."='".$value."' AND deleted_at IS NULL";
+        }
         return $this->connection->query($sql)->fetchAll();
     }
-    protected function forceDelete() {
-        $sql = "DROP TABLE ".$this->table;
+    public function forceDelete($id) {
+        $sql = "DELETE FROM ".$this->table." WHERE id=".$id;
         $this->connection->query($sql);
     }
 }
