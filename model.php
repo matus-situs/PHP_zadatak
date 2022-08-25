@@ -1,5 +1,5 @@
 <?php
-require_once("connection.php");
+require_once("Connection.php");
 
 trait Timestamps {
     public function addTimestamps() {
@@ -24,12 +24,16 @@ trait Timestamps {
     }
 }
 
-class Model {
+abstract class Model {
     protected $attributes = [];
     protected $allowed = [];
     protected $table;
     protected $database;
     protected $connection;
+    public function __construct() {
+        $this->database = new Connection;
+        $this->connection = $this->database->connectDB("localhost", "test", "root", null);
+    }
     public function toArray() {
         return get_object_vars($this);
     }
@@ -74,47 +78,54 @@ class Model {
         foreach ($this->allowed as $key=>$attribute) {
             $this->attributes[$key] = $this->allowed[$key];
         }
+
         $sql = "INSERT INTO ".$this->table." (";
+
         foreach ($this->attributes as $key=>$attribute) {
             $sql .= $key.",";
         }
+
         $sql = rtrim($sql, ",");
         $sql .= ") VALUES (";
+
         foreach ($this->attributes as $key=>$attribute) {
             $sql .= "'".$attribute."',";
         }
+
         $sql = rtrim($sql, ",");
         $sql .= ")";
         $this->connection->query($sql);
     }
+    public function update() {
+        $sql = "UPDATE ".$this->table." SET ";
+    }
     public function all() {
-        $sql = "SHOW COLUMNS FROM ".$this->table." LIKE 'deleted_at'";
-        $column = $this->connection->query($sql)->fetch();
-        if (!$column) {
-            $sql = "SELECT * FROM ".$this->table;
-        } else {
-            $sql = "SELECT * FROM ".$this->table." WHERE deleted_at IS NULL";
-        }
+        $sql = "SELECT * FROM ".$this->table;
+
         return $this->connection->query($sql)->fetchAll();
     }
     public function fetchByID($id) {
         $sql = "SHOW COLUMNS FROM ".$this->table." LIKE 'deleted_at'";
         $column = $this->connection->query($sql)->fetch();
+
         if (!$column) {
             $sql = "SELECT * FROM ".$this->table." WHERE id=".$id;
         } else {
             $sql = "SELECT * FROM ".$this->table." WHERE id=".$id." AND deleted_at IS NULL";
         }
+        
         return $this->connection->query($sql)->fetch();
     }
     public function fetchByAttribute($attribute, $value) {
         $sql = "SHOW COLUMNS FROM ".$this->table." LIKE 'deleted_at'";
         $column = $this->connection->query($sql)->fetch();
+
         if (!$column) {
             $sql = "SELECT * FROM ".$this->table." WHERE ".$attribute."='".$value."'";
         } else {   
             $sql = "SELECT * FROM ".$this->table." WHERE ".$attribute."='".$value."' AND deleted_at IS NULL";
         }
+
         return $this->connection->query($sql)->fetchAll();
     }
     public function forceDelete($id) {

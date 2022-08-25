@@ -1,5 +1,5 @@
 <?php
-include_once("users.php");
+include_once("User.php");
 
 $user = new User();
 $user->Username = "marko";
