@@ -2,16 +2,16 @@
 include_once("User.php");
 
 $user = new User();
-$user->Username = "marko";
-$user->Password = "peric";
+/*$user->Username = "orginal";
+$user->Password = "orginal";
 $user->save();
-$user->delete(7);
+$user->Username = "promjenjen";
+$user->Password = "promjenjen";*/
 $user->addTimestamps();
-$user->forceDelete(8);
 echo "<br>";
-var_dump($user->fetchByID(8));
+var_dump($user->fetchByID(12));
 echo "<br>";
-var_dump($user->fetchByAttribute("Username", "pero"));
+//var_dump($user->fetchByAttribute("Username", "pero"));
 echo "<br>";
-var_dump($user->all());
+//var_dump($user->all());
 echo "<br>";
