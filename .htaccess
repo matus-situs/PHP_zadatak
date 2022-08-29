@@ -1,2 +1,3 @@
 RewriteEngine On
-RewriteRule ^user/?$ index.php [NC,L]
+RewriteRule ^[A-Za-z-]+/?$ index.php [NC,L]
+RewriteRule ^[A-Za-z-]+/([0-9]+)/?$ index.php?user_id=$1 [NC,L]
