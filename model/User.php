@@ -1,5 +1,5 @@
 <?php
-include_once("Model.php");
+include_once("../model/Model.php");
 class User extends Model {
     use Timestamps;
     protected $table = __CLASS__;
