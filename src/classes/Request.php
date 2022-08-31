@@ -1,5 +1,7 @@
 <?php
-require_once "../interface/IRequest.php";
+namespace Msitaric\Phpzad\classes;
+
+use Msitaric\Phpzad\interface\IRequest as IRequest;
 
 class Request implements IRequest
 {

@@ -1,5 +1,9 @@
 <?php
-include_once("../model/Model.php");
+namespace Msitaric\Phpzad\model;
+
+use Model;
+use Timestamps;
+
 class User extends Model {
     use Timestamps;
     protected $table = __CLASS__;

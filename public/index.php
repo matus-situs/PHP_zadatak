@@ -1,8 +1,11 @@
 <?php
+namespace Msitaric\Phpzad\public;
 
-include_once '../classes/Request.php';
-include_once '../classes/Router.php';
-include_once "../controller/UserController.php";
+use Msitaric\Phpzad\classes\Request as Request;
+use Msitaric\Phpzad\classes\Router as Router;
+
+require_once __DIR__ . '/../vendor/autoload.php';
+
 $router = new Router(new Request);
 
 

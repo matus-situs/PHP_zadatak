@@ -1,5 +1,8 @@
 <?php
-require_once("../classes/Connection.php");
+namespace Msitaric\Phpzad\classes;
+use Connection;
+use Exception;
+use PDO;
 
 trait Timestamps
 {

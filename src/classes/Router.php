@@ -1,4 +1,8 @@
 <?php
+namespace Msitaric\Phpzad\classes;
+
+use Msitaric\Phpzad\interface\IRequest as IRequest;
+use Msitaric\Phpzad\controller\UserController;
 
 class Router
 {

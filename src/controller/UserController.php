@@ -1,6 +1,7 @@
 <?php
-include "../model/User.php";
-require_once "../vendor/autoload.php";
+namespace Msitaric\Phpzad\controller;
+
+use Msitaric\Phpzad\model\User;
 
 class UserController {
     public function getUsers() {
@@ -9,11 +10,7 @@ class UserController {
             'cache' => '/path/to/compilation_cache',
         ]);
         $users = new User;
-        $template = $twig->load("index.html");
+        $template = $twig->load("index.php");
         echo $template->render($users->all());
-    }
-    public function returnUser($id) {
-        $users = new User;
-        return json_encode($users->fetchByID($id));
     }
 }
