@@ -6,4 +6,4 @@ include_once "../controller/UserController.php";
 $router = new Router(new Request);
 
 
-$router->get('/users', UserController::getUsers());
+$router->get('/users', "UserController::getUsers");

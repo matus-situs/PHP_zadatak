@@ -1,0 +1,15 @@
+{
+    "name": "msitaric/phpzad",
+    "description": "vjezba",
+    "type": "library",
+    "autoload": {
+        "psr-4": {
+            "Msitaric\\Phpzad\\": "src/"
+        }
+    },
+    "minimum-stability": "stable",
+    "require": {
+        "php": ">=7.4",
+        "twig/twig": "^3.4"
+    }
+}

@@ -55,17 +55,17 @@ class Router
    */
   function resolve()
   {
+    
     $methodDictionary = $this->{strtolower($this->request->requestMethod)};
     $formatedRoute = $this->formatRoute($this->request->requestUri);
-    $method = $methodDictionary[$formatedRoute];
-    
-    if(is_null($method))
-    {
-      $this->defaultRequestHandler();
-      return;
-    }
 
-    echo $method;
+    if(array_key_exists($formatedRoute, $methodDictionary)) {
+      $method = $methodDictionary[$formatedRoute];
+      list($class, $function) = explode("::", $method);
+      echo (new $class)->$function();
+    } else {
+      $this->defaultRequestHandler();
+    }
   }
 
   function __destruct()
